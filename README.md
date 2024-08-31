@@ -46,4 +46,5 @@ This Python script interacts with the Unit0 Testnet using the Web3 library to ma
 5. **Run the Script:**
 
     ```sh
+     screen -S  unit
      python main.py
