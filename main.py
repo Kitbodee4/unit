@@ -8,11 +8,11 @@ import random
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 MAX_RETRIES = 5
-RETRY_DELAY = 5  # seconds
-TRANSACTION_COUNT = 1000
-NUM_THREADS = 8  # Adjust this according to your needs
-MIN_SLEEP = 1  # Minimum sleep time in seconds
-MAX_SLEEP = 5  # Maximum sleep time in seconds
+RETRY_DELAY = 10  # seconds
+TRANSACTION_COUNT = 100000
+NUM_THREADS = 20  # Adjust this according to your needs
+MIN_SLEEP = 10  # Minimum sleep time in seconds
+MAX_SLEEP = 50  # Maximum sleep time in seconds
 
 # Configure Loguru with color formatting
 logger.remove()
@@ -70,19 +70,22 @@ def process_wallet(private_key, wallet_index):
 
             receipt = retry(lambda: web3.eth.get_transaction_receipt(tx_hash))
             if receipt:
+                # Introduce random sleep time between wallet processing
+                sleep_time = random.uniform(MIN_SLEEP, MAX_SLEEP)
                 if receipt['status'] == 1:
                     logger.success(f"Wallet {wallet_index} - <green><b>TX Hash: {web3.to_hex(tx_hash)}</b></green>")
+                    logger.info(f"Wallet {wallet_index} - <cyan>Sleeping for {sleep_time:.2f} seconds before processing next wallet...</cyan>")
+                    time.sleep(sleep_time)
                 else:
                     logger.error(f"Wallet {wallet_index} - <red>Transaction FAILED</red>")
+                    logger.info(f"Wallet {wallet_index} - <cyan>Sleeping for {sleep_time:.2f} seconds before processing next wallet...</cyan>")
+                    time.sleep(sleep_time)
             else:
                 logger.warning(f"Wallet {wallet_index} - <yellow>Transaction is still pending after multiple retries.</yellow>")
         except Exception as e:
             logger.error(f"Wallet {wallet_index} - Failed to send transaction: <red>{e}</red>")
 
-    # Introduce random sleep time between wallet processing
-    sleep_time = random.uniform(MIN_SLEEP, MAX_SLEEP)
-    logger.info(f"Wallet {wallet_index} - <cyan>Sleeping for {sleep_time:.2f} seconds before processing next wallet...</cyan>")
-    time.sleep(sleep_time)
+    
 
 def main():
     try:
